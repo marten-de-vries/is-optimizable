@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+
+"use strict";
+
+var getOptimizationKillers = require('../');
+var fs = require('fs');
+var glob = require('glob');
+var nomnom = require('nomnom');
+
+var opts = nomnom
+  .script("is-optimizable")
+  .option('encoding', {
+    help: "Input file encoding",
+    default: 'UTF-8',
+  })
+  .option('harmony', {
+    help: "Parse as ES6",
+    flag: true,
+  })
+  .option('disallow-lonely-try', {
+    help: "Don't allow try/catch/finally as only thing inside a function.",
+    flag: true,
+  })
+  .option('files', {
+    position: 0,
+    list: true,
+    help: "The files to check for optimizability. Glob patterns are allowed.",
+    required: true,
+  })
+  .nocolors()
+  .parse();
+
+var files = [];
+opts.files.forEach(function (pattern) {
+  files.push.apply(files, glob.sync(pattern));
+});
+
+var successes = files.map(function (file) {
+  var code = fs.readFileSync(file, {encoding: opts.encoding});
+  var problems = getOptimizationKillers(code, {
+    ecmaVersion: opts.harmony ? 6 : 5,
+    allowLonelyTry: !opts['disallow-lonely-try'],
+    allowHashBang: true,
+  }).map(function (line) {
+    return file + ': ' + line;
+  });
+  if (problems.length) {
+    console.log(problems.join('\n'));
+    return false;
+  }
+  return true;
+});
+
+if (!successes.every(function (x) {return x; })) {
+  process.exit(1);
+}
