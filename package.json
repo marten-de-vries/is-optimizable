@@ -1,6 +1,6 @@
 {
   "name": "is-optimizable",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A tool that checks for V8 optimization killers",
   "main": "index.js",
   "dependencies": {
@@ -30,6 +30,10 @@
     "javascript",
     "tool"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marten-de-vries/is-optimizable.git"
+  },
   "author": "Marten de Vries",
   "license": "ISC"
 }
