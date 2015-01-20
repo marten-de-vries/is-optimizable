@@ -6,8 +6,11 @@ var getOptimizationKillers = require('../');
 
 var code = fs.readFileSync(__dirname + '/problems.js');
 
-// a small test first that depends on the options
+// small tests first that depend on the options
 if (getOptimizationKillers('try {} finally {}').length !== 0) {
+  throw new Error("allowLonelyTry is broken!");
+}
+if (getOptimizationKillers('function x() {try {} catch(err) {}}').length !== 0) {
   throw new Error("allowLonelyTry is broken!");
 }
 

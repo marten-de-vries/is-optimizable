@@ -60,9 +60,14 @@ module.exports = function getOptimizationKillers(code, opts) {
     },
     TryStatement: function (node, ancestors) {
       var parent = ancestors[ancestors.length - 2];
+      var hasLengthOneBlockStmt = false;
+      if (parent.type === 'BlockStatement' && parent.body.length === 1) {
+        parent = ancestors[ancestors.length - 3];
+        hasLengthOneBlockStmt = true;
+      }
       var isLonelyTry = (
         SCOPE_HOLDERS.indexOf(parent.type) !== -1 &&
-        parent.body.length === 1
+        (hasLengthOneBlockStmt || parent.body.length === 1)
       );
       if (opts.allowLonelyTry && isLonelyTry) {
         return;

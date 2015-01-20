@@ -1,6 +1,6 @@
 {
   "name": "is-optimizable",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A tool that checks for V8 optimization killers",
   "main": "index.js",
   "dependencies": {
