@@ -30,22 +30,28 @@ Example
 -------
 
 ```
-marten@procyon:~/git/is-optimizable$ ./bin/is-optimizable --harmony test/*
-test/problems.js: global code: line 1: debugger statement
-test/problems.js: function 'a': line 4: debugger statement
-test/problems.js: function 'test': line 7: generator function
-test/problems.js: function 'unnamed function': line 10: generator function
-test/problems.js: global code: line 13: for .. of statement
-test/problems.js: global code: line 16: try/finally statement
-test/problems.js: global code: line 17: try/catch statement
-test/problems.js: global code: line 18: try/catch/finally statement
-test/problems.js: global code: line 21: object literal includes a get declaration
-test/problems.js: global code: line 24: object literal includes a set declaration
-test/problems.js: global code: line 27: object literal includes a __proto__ property
-test/problems.js: global code: line 31: possible eval() call
-test/problems.js: global code: line 32: possible eval() call
-test/problems.js: global code: line 34: with statement
-test/problems.js: global code: line 38: switch statement with more than 128 cases
+marten@procyon:~/git/is-optimizable$ ./bin/is-optimizable --harmony test/problems.js
+test/problems.js: line 1: global code: debugger statement
+test/problems.js: line 4: function 'a': debugger statement
+test/problems.js: line 7: function 'test': generator function
+test/problems.js: line 10: function 'unnamed function': generator function
+test/problems.js: line 13: global code: for .. of statement
+test/problems.js: line 16: global code: try/finally statement
+test/problems.js: line 17: global code: try/catch statement
+test/problems.js: line 18: global code: try/catch/finally statement
+test/problems.js: line 21: global code: object literal includes a get declaration
+test/problems.js: line 24: global code: object literal includes a set declaration
+test/problems.js: line 27: global code: object literal includes a __proto__ property
+test/problems.js: line 31: global code: possible eval() call
+test/problems.js: line 32: global code: possible eval() call
+test/problems.js: line 34: global code: with statement
+test/problems.js: line 38: global code: switch statement with more than 128 cases
+test/problems.js: line 175: function 'c': possibly unsafe 'arguments' usage
+test/problems.js: line 190: function 'f': possibly unsafe 'arguments' usage
+test/problems.js: line 195: function 'f': reassignment of argument 'a' while 'arguments' is referenced in the same function body
+test/problems.js: line 196: function 'f': possibly unsafe 'arguments' usage
+test/problems.js: line 211: function 'g': possibly unsafe 'arguments' usage
+test/problems.js: line 221: function 'i': possibly unsafe 'arguments' usage
 marten@procyon:~/git/is-optimizable$ 
 ```
 
@@ -74,11 +80,9 @@ var b = 2;
 Wishlist/TODO
 -------------
 
-- compound let assignment
-- compound const assignment
-- check arguments
-- check for .. in
-- smarter check for ``eval()``
+- compound let assignment - rare so not yet implemented
+- compound const assignment - rare so not yet implemented
+- check for .. in - it's efficiency is largely runtime dependant though.
 
 PRs welcome!
 

@@ -1,10 +1,11 @@
 {
   "name": "is-optimizable",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "A tool that checks for V8 optimization killers",
   "main": "index.js",
   "dependencies": {
     "acorn": "^0.11.0",
+    "alphanumeric-sort": "0.0.1",
     "extend": "^2.0.0",
     "glob": "^4.3.5",
     "nomnom": "^1.8.1"

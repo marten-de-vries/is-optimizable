@@ -3,8 +3,9 @@
 var parse = require('acorn').parse;
 var walk = require('acorn/util/walk');
 var extend = require('extend');
+var compare = require('alphanumeric-sort').compare;
 
-var CONTAINERS = [
+var SCOPE_HOLDERS = [
   'FunctionExpression',
   'FunctionDeclaration',
   'ArrowExpression',
@@ -30,13 +31,7 @@ module.exports = function getOptimizationKillers(code, opts) {
       return;
     }
 
-    var container;
-    for (var i = ancestors.length; i-- > 0; ) {
-      container = ancestors[i];
-      if (CONTAINERS.indexOf(container.type) !== -1) {
-        break;
-      }
-    }
+    var container = getContainer(ancestors, SCOPE_HOLDERS);
     var name;
     if (container.type === 'Program') {
       name = "global code";
@@ -44,15 +39,16 @@ module.exports = function getOptimizationKillers(code, opts) {
       var funcName = (container.id || {}).name || "unnamed function";
       name = "function '" + funcName + "'";
     }
-    killers.push(name + ': line ' + line + ': ' + reason);
+    killers.push('line ' + line + ': ' + name + ': ' + reason);
   }
 
-  function checkIdentifier(node, ancestors) {
+  function checkEval(node, ancestors) {
     if (node.name === 'eval') {
       addKiller('possible eval() call', node, ancestors);
     }
   }
 
+  // first pass
   walk.ancestor(ast, {
     Function: function (node, ancestors) {
       if (node.generator) {
@@ -65,7 +61,7 @@ module.exports = function getOptimizationKillers(code, opts) {
     TryStatement: function (node, ancestors) {
       var parent = ancestors[ancestors.length - 2];
       var isLonelyTry = (
-        CONTAINERS.indexOf(parent.type) !== -1 &&
+        SCOPE_HOLDERS.indexOf(parent.type) !== -1 &&
         parent.body.length === 1
       );
       if (opts.allowLonelyTry && isLonelyTry) {
@@ -99,14 +95,60 @@ module.exports = function getOptimizationKillers(code, opts) {
     DebuggerStatement: function (node, ancestors) {
       addKiller('debugger statement', node, ancestors);
     },
-    Identifier: checkIdentifier,
+    Identifier: function (node, ancestors) {
+      checkEval(node, ancestors);
+
+      if (node.name !== 'arguments') {
+        return;
+      }
+
+      // mark container as 'using arguments'
+      var container = getContainer(ancestors, SCOPE_HOLDERS);
+      container.referencesArguments = true;
+
+      // check for unsafe argument use
+      var parent = ancestors[ancestors.length - 2];
+      var grandParent = ancestors[ancestors.length - 3];
+      var isPropertyRead = (
+        parent.type === 'MemberExpression' &&
+        parent.object === node &&
+        (
+          ['UpdateExpresion', 'AssignmentExpression'].indexOf(grandParent.type) === -1 ||
+          grandParent.right === parent
+        )
+      );
+      var forLoopParent = getContainer(ancestors, ['ForStatement']);
+      var isSafePropertyRead = isPropertyRead && (
+        parent.property.name === 'length' ||
+        (
+          //for loop
+          forLoopParent &&
+          forLoopParent.init &&
+          nameOf(forLoopParent.init) === nameOf(parent.property)
+        )
+      );
+      var isApplyCall = (
+        parent.type === 'CallExpression' &&
+        parent.callee.type === 'MemberExpression' &&
+        parent.callee.property.name === 'apply' &&
+        parent.arguments[1] === node
+      );
+      var isExpressionStatement = parent.type === 'ExpressionStatement';
+      var isSafeArgumentUse = (
+        isSafePropertyRead ||
+        isApplyCall ||
+        isExpressionStatement
+      );
+      if (!isSafeArgumentUse) {
+        addKiller("possibly unsafe 'arguments' usage", node, ancestors);
+      }
+    },
     MemberExpression: function (node, ancestors) {
-      checkIdentifier(node.property, ancestors);
+      checkEval(node.property, ancestors);
     },
     WithStatement: function (node, ancestors) {
       addKiller('with statement', node, ancestors);
     },
-    //TODO: arguments
     SwitchStatement: function (node, ancestors) {
       /* istanbul ignore else */
       if (node.cases.length > 128) {
@@ -116,9 +158,53 @@ module.exports = function getOptimizationKillers(code, opts) {
     //TODO: for/in
   });
 
-  return killers;
+  function checkReassignmentWhileArgumentsReferenced(name, ancestors) {
+    var container = getContainer(ancestors, SCOPE_HOLDERS);
+
+    var isBad = (
+      container.referencesArguments &&
+      container.params.map(nameOf).indexOf(name) !== -1
+    );
+    if (isBad) {
+      var node = ancestors[ancestors.length - 1];
+      var msg = (
+        "reassignment of argument '" +
+        name +
+        "' while 'arguments' is referenced in the same function body"
+      );
+      addKiller(msg, node, ancestors);
+    }
+  }
+
+  // second pass
+  walk.ancestor(ast, {
+    AssignmentExpression: function (node, ancestors) {
+      var name = nameOf(node.left);
+      checkReassignmentWhileArgumentsReferenced(name, ancestors);
+    },
+    UpdateExpression: function (node, ancestors) {
+      var name = nameOf(node.argument);
+      checkReassignmentWhileArgumentsReferenced(name, ancestors);
+    },
+  });
+
+  return killers.sort(compare);
 };
 
 function nameOf(key) {
+  if (key.type === 'VariableDeclaration') {
+    return nameOf(key.declarations[0].id);
+  }
   return key.name || key.value;
+}
+
+function getContainer(ancestors, containerTypes) {
+  var container;
+  for (var i = ancestors.length; i-- > 0; ) {
+    container = ancestors[i];
+    if (containerTypes.indexOf(container.type) !== -1) {
+      break;
+    }
+  }
+  return container;
 }

@@ -17,21 +17,28 @@ var killers = getOptimizationKillers(code, {
 });
 
 var expected = [
-  "global code: line 1: debugger statement",
-  "function 'a': line 4: debugger statement",
-  "function 'test': line 7: generator function",
-  "function 'unnamed function': line 10: generator function",
-  "global code: line 13: for .. of statement",
-  "global code: line 16: try/finally statement",
-  "global code: line 17: try/catch statement",
-  "global code: line 18: try/catch/finally statement",
-  "global code: line 21: object literal includes a get declaration",
-  "global code: line 24: object literal includes a set declaration",
-  "global code: line 27: object literal includes a __proto__ property",
-  "global code: line 31: possible eval() call",
-  "global code: line 32: possible eval() call",
-  "global code: line 34: with statement",
-  "global code: line 38: switch statement with more than 128 cases",
+  "line 1: global code: debugger statement",
+  "line 4: function 'a': debugger statement",
+  "line 7: function 'test': generator function",
+  "line 10: function 'unnamed function': generator function",
+  "line 13: global code: for .. of statement",
+  "line 16: global code: try/finally statement",
+  "line 17: global code: try/catch statement",
+  "line 18: global code: try/catch/finally statement",
+  "line 21: global code: object literal includes a get declaration",
+  "line 24: global code: object literal includes a set declaration",
+  "line 27: global code: object literal includes a __proto__ property",
+  "line 31: global code: possible eval() call",
+  "line 32: global code: possible eval() call",
+  "line 34: global code: with statement",
+  "line 38: global code: switch statement with more than 128 cases",
+  "line 175: function 'c': possibly unsafe 'arguments' usage",
+  "line 190: function 'f': possibly unsafe 'arguments' usage",
+  "line 195: function 'f': reassignment of argument 'a' while 'arguments' " +
+    "is referenced in the same function body",
+  "line 196: function 'f': possibly unsafe 'arguments' usage",
+  "line 211: function 'g': possibly unsafe 'arguments' usage",
+  "line 221: function 'i': possibly unsafe 'arguments' usage",
 ];
 
 var notInKillers = expected.filter(function (item) {

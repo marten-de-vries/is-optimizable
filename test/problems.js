@@ -170,6 +170,57 @@ switch(c) {
 /* is-optimizable ignore next */
 try {} finally {}
 
+function c() {
+  // this is bad
+  return arguments;
+}
+
+function d() {
+  // this is ok
+  return arguments.length;
+}
+
+function e() {
+  // this is ok too
+  return b.apply(null, arguments);
+}
+
+function f() {
+  // this is bad
+  var args = [].slice.call(arguments);
+}
+
+function f(a, b) {
+  // bad
+  a = 2;
+  arguments[0];
+}
+
+function f() {
+  // ok
+  var args = new Array(arguments.length);
+  for(var i = 0; i < args.length; ++i) {
+    args[i] = arguments[i];
+  }
+  return args;
+}
+
+function g(a, b, c) {
+  // bad - only at runtime it becomes clear if a, b & c are not
+  // undefined
+  return arguments[0];
+}
+
+function h() {
+  // ok
+  arguments;
+}
+
+function i() {
+  // bad
+  arguments = 3;
+}
+
 // add new tests at the end, to prevent line numbers from changing
 
 // this file isn't jshinted since some bad performance things also make
