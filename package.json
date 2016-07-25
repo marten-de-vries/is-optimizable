@@ -4,7 +4,7 @@
   "description": "A tool that checks for V8 optimization killers",
   "main": "index.js",
   "dependencies": {
-    "acorn": "^0.11.0",
+    "acorn": "^3.3.0",
     "alphanumeric-sort": "0.0.1",
     "extend": "^2.0.0",
     "glob": "^7.0.0",
